@@ -142,8 +142,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Views\Templates\Pdf\BlankAcordCertificate.pdf" />
     <Content Include="packages.config" />
+    <None Include="Properties\PublishProfiles\PublishToFiles.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -152,7 +152,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Content\Images\SignatureCertificate.png" />
     <Content Include="Global.asax" />
     <Content Include="Web.config" />
   </ItemGroup>
@@ -177,7 +176,9 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Content\Images\" />
     <Folder Include="Content\Temp\" />
+    <Folder Include="Views\Templates\Pdf\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BizCover.Common\BizCover.Common.csproj">
