@@ -115,7 +115,7 @@ namespace BizCover.Utility.Document.Template.Services
 
             var templatePath = GetResource(certificate.TemplatePdfUrl, CertificateConstant.S_TEMPLATE_PDF_PATH);
             if (!File.Exists(templatePath))
-                return null;
+                throw new Exception("Template pdf file not exists!");
 
             var filename = _fileService.GetFileName("certificate", certificate.ApplicationId, certificate.ProductId);
             var folderCertificate = HttpContext.Current.Server.MapPath(CertificateConstant.S_OUTPUT_PATH);
@@ -316,7 +316,7 @@ namespace BizCover.Utility.Document.Template.Services
             }
             catch (Exception ex)
             {
-                return null;
+                throw ex;
             }
         }
     }

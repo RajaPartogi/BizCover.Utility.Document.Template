@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
@@ -23,14 +24,14 @@ namespace BizCover.Utility.Document.Template.Controllers
         public HttpResponseMessage GetCertificate([FromBody] Certificate certificate)
         {   
             if (certificate == null)
-                return new HttpResponseMessage(HttpStatusCode.BadRequest);
-
-            var certificatePath = _generateDocumentService.GenerateCertificate(certificate);
-            if (string.IsNullOrEmpty(certificatePath))
-                return new HttpResponseMessage(HttpStatusCode.InternalServerError);
+                return ReturnErrorResponseMessage(HttpStatusCode.BadRequest, "Ceritificate payload is invalid");
 
             try
             {
+                var certificatePath = _generateDocumentService.GenerateCertificate(certificate);
+                if (string.IsNullOrEmpty(certificatePath))
+                    return ReturnErrorResponseMessage(HttpStatusCode.InternalServerError, "Certificate generation failed");
+
                 var responseStream = _fileService.GetMemoryStream(certificatePath);
 
                 HttpResponseMessage response = new HttpResponseMessage();
@@ -40,7 +41,13 @@ namespace BizCover.Utility.Document.Template.Controllers
             }
             catch (IOException ex)
             {
-                throw new HttpResponseException(HttpStatusCode.InternalServerError);
+                var errorResponse = ReturnErrorResponseMessage(HttpStatusCode.InternalServerError, ex.Message + "::InnerException::" + ex.InnerException?.Message);
+                throw new HttpResponseException(errorResponse);
+            }
+            catch (Exception ex)
+            {
+                var errorResponse = ReturnErrorResponseMessage(HttpStatusCode.InternalServerError, ex.Message + "::InnerException::" + ex.InnerException?.Message);
+                throw new HttpResponseException(errorResponse);
             }
         }
     }

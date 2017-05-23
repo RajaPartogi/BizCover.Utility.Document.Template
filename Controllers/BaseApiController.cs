@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Specialized;
+using System.Net;
+using System.Net.Http;
 using System.Web;
 using System.Web.Http;
 
@@ -25,6 +27,13 @@ namespace BizCover.Utility.Document.Template.Controllers
                 return null;
 
             return HttpUtility.ParseQueryString(querystring);
+        }
+
+        protected HttpResponseMessage ReturnErrorResponseMessage(HttpStatusCode statusCode, string errorMessage)
+        {
+            var errorResponse = new HttpResponseMessage(statusCode);
+            errorResponse.Content = new StringContent(errorMessage);
+            return errorResponse;
         }
     }
 }
