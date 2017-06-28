@@ -99,6 +99,9 @@ namespace BizCover.Utility.Document.Template.Services
             if (string.IsNullOrEmpty(path))
                 return false;
 
+            if (Directory.Exists(path) == false)
+                Directory.CreateDirectory(path);
+
             foreach (var file in Directory.GetFiles(path))
             {
                 var fileInfo = new FileInfo(file);
