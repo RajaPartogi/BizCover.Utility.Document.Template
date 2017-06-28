@@ -312,6 +312,10 @@ namespace BizCover.Utility.Document.Template.Services
                 // flatten form fields and close document
                 stamper.Close();
                 stamper.FormFlattening = true;
+                stamper.Dispose();
+                reader.Close();
+                reader.Dispose();
+
                 return certificatePath;
             }
             catch (Exception ex)
