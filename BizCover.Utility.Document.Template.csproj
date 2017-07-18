@@ -158,12 +158,15 @@
   <ItemGroup>
     <Compile Include="App_Start\NinjectWebCommon.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Constants\EndorsementConstant.cs" />
     <Compile Include="Constants\CertificateConstant.cs" />
     <Compile Include="Constants\CertificateFieldsConstant.cs" />
     <Compile Include="Constants\FormatConstant.cs" />
     <Compile Include="Controllers\BaseApiController.cs" />
+    <Compile Include="Controllers\EndorsementApiController.cs" />
     <Compile Include="Controllers\CertificateApiController.cs" />
     <Compile Include="Extensions\HttpContentExtension.cs" />
+    <Compile Include="Extensions\PdfStamperExtension.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -197,7 +200,7 @@
     <VisualStudio>
       <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
         <WebProjectProperties>
-          <UseIIS>True</UseIIS>
+          <UseIIS>False</UseIIS>
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>63816</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>

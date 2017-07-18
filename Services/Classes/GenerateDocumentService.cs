@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Web;
 using BizCover.Common.DtoModels.Certificate;
+using BizCover.Common.DtoModels.Endorsement;
 using BizCover.Utility.Document.Template.Constants;
 using BizCover.Utility.Document.Template.Extensions;
 using BizCover.Utility.Document.Template.Services.Interfaces;
@@ -14,6 +16,7 @@ namespace BizCover.Utility.Document.Template.Services
     public class GenerateDocumentService : IGenerateDocumentService
     {
         private readonly IFileService _fileService;
+
         public GenerateDocumentService(IFileService fileService)
         {
             _fileService = fileService;
@@ -22,7 +25,7 @@ namespace BizCover.Utility.Document.Template.Services
             CleanUpFile(HttpContext.Current.Server.MapPath(CertificateConstant.S_OUTPUT_PATH), TimeSpan.FromDays(1));
         }
 
-        private  bool DownloadFile(string url, string absolutePath)
+        private bool DownloadFile(string url, string absolutePath)
         {
             try
             {
@@ -44,7 +47,7 @@ namespace BizCover.Utility.Document.Template.Services
                 }
                 return true;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return false;
             }
@@ -153,7 +156,7 @@ namespace BizCover.Utility.Document.Template.Services
                     pdfFormFields.SetField(CertificateFieldsConstant.S_INSURER_NAIC + insurerNumber, insurer.Naic);
                     insurerNumber += 1;
                 }
-                
+
                 var policyGL = certificate.PolicyGl;
                 if (policyGL != null)
                 {
@@ -293,23 +296,58 @@ namespace BizCover.Utility.Document.Template.Services
                 pdfFormFields.SetField(CertificateFieldsConstant.S_HOLDER, certificate.Holder.FullFormat);
 
                 //add signature image
+                
                 var signatureFile = GetResource(certificate.SignatureImageUrl, CertificateConstant.S_SIGNATURE_IMAGE_PATH);
-                var signatureArea = pdfFormFields.GetFieldPositions (CertificateFieldsConstant.S_SIGNATURE);
-                var fieldPositions = pdfFormFields.GetFieldPositions(CertificateFieldsConstant.S_SIGNATURE);
-                if (signatureArea != null && fieldPositions != null && File.Exists(signatureFile))
+                stamper.SetImage(CertificateFieldsConstant.S_SIGNATURE, signatureFile);
+               
+                // flatten form fields and close document
+                stamper.Close();
+                stamper.FormFlattening = true;
+                stamper.Dispose();
+                reader.Close();
+                reader.Dispose();
+
+                return certificatePath;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public string GenerateEndorsement(EndorsementDto endorsement)
+        {
+            if (endorsement == null)
+                return null;
+
+            var templatePath = GetResource(endorsement.TemplatePdfUrl, EndorsementConstant.S_TEMPLATE_PDF_PATH);
+            if (!File.Exists(templatePath))
+                throw new Exception("Template pdf file not exists!");
+
+            var filename = _fileService.GetFileName("endorsement", endorsement.ApplicationId, endorsement.ProductId);
+            var folderEndorsement = HttpContext.Current.Server.MapPath(EndorsementConstant.S_OUTPUT_PATH);
+            var endorsementPath = folderEndorsement + filename;
+            CleanUpFile(folderEndorsement, TimeSpan.FromDays(1));
+
+            try
+            {
+                var reader = new PdfReader(templatePath);
+                var stamper = new PdfStamper(reader, new FileStream(endorsementPath, FileMode.Create));
+                stamper.SetEncryption(PdfWriter.STRENGTH128BITS, string.Empty, EndorsementConstant.S_PASSWORD, PdfWriter.AllowPrinting | PdfWriter.AllowCopy | PdfWriter.AllowScreenReaders);
+                var pdfFormFields = stamper.AcroFields;
+
+                foreach (var variableValue in endorsement.VariableValues)
                 {
-                    var image = iTextSharp.text.Image.GetInstance(signatureFile);
-
-                    var rect = signatureArea.First().position;
-                    var logoRect = new iTextSharp.text.Rectangle(rect);
-
-                    int page = fieldPositions[0].page;
-                    var cb = stamper.GetOverContent(page);
-
-                    image.SetAbsolutePosition(logoRect.Left, (logoRect.Top - logoRect.Height));
-                    image.ScaleToFit(logoRect.Width, logoRect.Height);
-
-                    cb.AddImage(image);
+                    var field = variableValue.Key;
+                    var value = variableValue.Value;
+                    var imageExtensions = new List<string>() {EndorsementConstant.S_IMAGE_FILE_EXTENSION_PNG, EndorsementConstant.S_IMAGE_FILE_EXTENSION_JPG};
+                    if (imageExtensions.Contains(Path.GetExtension(value)))
+                    {
+                        var signatureFile = GetResource(value, EndorsementConstant.S_SIGNATURE_IMAGE_PATH);
+                        stamper.SetImage(field, signatureFile);
+                    }
+                    else
+                        pdfFormFields.SetField(field, value);
                 }
 
                 // flatten form fields and close document
@@ -319,7 +357,7 @@ namespace BizCover.Utility.Document.Template.Services
                 reader.Close();
                 reader.Dispose();
 
-                return certificatePath;
+                return endorsementPath;
             }
             catch (Exception ex)
             {
