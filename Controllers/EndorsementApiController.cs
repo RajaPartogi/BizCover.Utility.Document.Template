@@ -32,11 +32,15 @@ namespace BizCover.Utility.Document.Template.Controllers
                 if (string.IsNullOrEmpty(EndorsementPath))
                     return ReturnErrorResponseMessage(HttpStatusCode.InternalServerError, "Endorsement generation failed");
 
-                var responseStream = _fileService.GetMemoryStream(EndorsementPath);
-
                 HttpResponseMessage response = new HttpResponseMessage();
                 response.StatusCode = HttpStatusCode.OK;
+
+                if (endorsement.ParseEmptyText)
+                    return response;
+
+                var responseStream = _fileService.GetMemoryStream(EndorsementPath);
                 response.Content = new StreamContent(responseStream);
+
                 return response;
             }
             catch (IOException ex)

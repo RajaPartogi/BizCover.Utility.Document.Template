@@ -9,5 +9,6 @@
         public const int N_BYTE_LENGTH = 8192;
 
         public const string S_DOCUMENT_FILENAME_FORMAT = "{0}_{1}_{2}.pdf";
+        public const string S_DOCUMENT_FILENAME_EMPTY_FORMAT = "{0}_{1}.pdf";
     }
 }

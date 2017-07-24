@@ -121,7 +121,7 @@ namespace BizCover.Utility.Document.Template.Services
 
             var templatePath = GetResource(certificate.TemplatePdfUrl, CertificateConstant.S_TEMPLATE_PDF_PATH);
             if (!File.Exists(templatePath))
-                throw new Exception("Template pdf file not exists!");
+                throw new Exception("Template pdf file not exists! :: Path: " + templatePath + " :: templatePdfUrl: " + certificate.TemplatePdfUrl);
 
             var filename = _fileService.GetFileName("certificate", certificate.ApplicationId, certificate.ProductId);
             var folderCertificate = HttpContext.Current.Server.MapPath(CertificateConstant.S_OUTPUT_PATH);
@@ -322,13 +322,32 @@ namespace BizCover.Utility.Document.Template.Services
 
             var templatePath = GetResource(endorsement.TemplatePdfUrl, EndorsementConstant.S_TEMPLATE_PDF_PATH);
             if (!File.Exists(templatePath))
-                throw new Exception("Template pdf file not exists!");
+                throw new Exception("Template pdf file not exists! :: Path: " + templatePath + " :: templatePdfUrl: " + endorsement.TemplatePdfUrl);
 
-            var filename = _fileService.GetFileName("endorsement", endorsement.ApplicationId, endorsement.ProductId);
-            var folderEndorsement = HttpContext.Current.Server.MapPath(EndorsementConstant.S_OUTPUT_PATH);
-            var endorsementPath = folderEndorsement + filename;
-            CleanUpFile(folderEndorsement, TimeSpan.FromDays(1));
+            var filename = string.Empty;
+            var folderEndorsement = string.Empty;
+            var endorsementPath = string.Empty;
 
+            if (endorsement.ParseEmptyText)
+            {
+                filename = string.Format(CertificateConstant.S_DOCUMENT_FILENAME_EMPTY_FORMAT, EndorsementConstant.S_DOCUMENT_FILENAME_EMPTY, endorsement.EndorsementCode);
+                folderEndorsement = HttpContext.Current.Server.MapPath(EndorsementConstant.S_OUTPUT_PATH_EMPTY);
+                endorsementPath = folderEndorsement + filename;
+
+                //Cleanup once a week.
+                CleanUpFile(folderEndorsement, TimeSpan.FromDays(7));
+
+                if (File.Exists(endorsementPath))
+                    return endorsementPath;
+            }
+            else
+            {
+                filename = _fileService.GetFileName("endorsement", endorsement.ApplicationId, endorsement.ProductId);
+                folderEndorsement = HttpContext.Current.Server.MapPath(EndorsementConstant.S_OUTPUT_PATH);
+                CleanUpFile(folderEndorsement, TimeSpan.FromDays(1));
+                endorsementPath = folderEndorsement + filename;
+            }
+            
             try
             {
                 var reader = new PdfReader(templatePath);
