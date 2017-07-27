@@ -13,5 +13,6 @@
         public const string S_DOCUMENT_FILENAME_EMPTY = "endorsement_empty";
         public const string S_IMAGE_FILE_EXTENSION_PNG = ".png";
         public const string S_IMAGE_FILE_EXTENSION_JPG = ".jpg";
+        public const string S_IMAGE_FILE_EXTENSION_PDF = ".pdf";
     }
 }

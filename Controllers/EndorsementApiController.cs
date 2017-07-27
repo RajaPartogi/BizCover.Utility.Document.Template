@@ -24,7 +24,7 @@ namespace BizCover.Utility.Document.Template.Controllers
         public HttpResponseMessage GetEndorsement([FromBody] EndorsementDto endorsement)
         {   
             if (endorsement == null)
-                return ReturnErrorResponseMessage(HttpStatusCode.BadRequest, "Ceritificate payload is invalid");
+                return ReturnErrorResponseMessage(HttpStatusCode.BadRequest, "Endorsement payload is invalid");
 
             try
             {

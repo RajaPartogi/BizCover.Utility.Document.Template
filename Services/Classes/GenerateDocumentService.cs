@@ -27,11 +27,10 @@ namespace BizCover.Utility.Document.Template.Services
 
         private bool DownloadFile(string url, string absolutePath)
         {
+            if (string.IsNullOrEmpty(absolutePath))
+                return false;
             try
             {
-                if (File.Exists(absolutePath))
-                    return true;
-
                 using (var client = new HttpClient())
                 {
                     using (var output = File.OpenWrite(absolutePath))
@@ -78,6 +77,26 @@ namespace BizCover.Utility.Document.Template.Services
             return filename;
         }
 
+        private bool IsValidPdf(string filepath)
+        {
+            if (string.IsNullOrEmpty(filepath))
+                return false;
+
+            bool Ret = true;
+            PdfReader reader = null;
+            try
+            {
+                reader = new PdfReader(filepath);
+            }
+            catch
+            {
+                Ret = false;
+                File.Delete(filepath);
+            }
+
+            return Ret;
+        }
+
         private string GetResource(string url, string path)
         {
             if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(path))
@@ -92,7 +111,14 @@ namespace BizCover.Utility.Document.Template.Services
             var templatePdfPath = folder + filename + fileExt;
             CleanUpFile(folder, TimeSpan.FromDays(1));
             if (File.Exists(templatePdfPath))
-                return templatePdfPath;
+            {
+                if (fileExt == EndorsementConstant.S_IMAGE_FILE_EXTENSION_PDF)
+                {
+                    if (IsValidPdf(templatePdfPath))
+                        return templatePdfPath;
+                }
+                else return templatePdfPath;
+            }
 
             return DownloadFile(url, templatePdfPath) ? templatePdfPath : string.Empty;
         }
@@ -323,6 +349,9 @@ namespace BizCover.Utility.Document.Template.Services
             var templatePath = GetResource(endorsement.TemplatePdfUrl, EndorsementConstant.S_TEMPLATE_PDF_PATH);
             if (!File.Exists(templatePath))
                 throw new Exception("Template pdf file not exists! :: Path: " + templatePath + " :: templatePdfUrl: " + endorsement.TemplatePdfUrl);
+
+            if (IsValidPdf(templatePath) == false)
+                throw new Exception("Template pdf file is invalid! :: Path: " + templatePath + " :: templatePdfUrl: " + endorsement.TemplatePdfUrl);
 
             var filename = string.Empty;
             var folderEndorsement = string.Empty;
