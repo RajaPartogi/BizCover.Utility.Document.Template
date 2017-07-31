@@ -30,13 +30,10 @@ namespace BizCover.Utility.Document.Template.Controllers
             {
                 var EndorsementPath = _generateDocumentService.GenerateEndorsement(endorsement);
                 if (string.IsNullOrEmpty(EndorsementPath))
-                    return ReturnErrorResponseMessage(HttpStatusCode.InternalServerError, "Endorsement generation failed");
+                    return ReturnErrorResponseMessage(HttpStatusCode.InternalServerError, "Endorsement generation failed :: TemplateUrl: " + endorsement.TemplatePdfUrl + " :: EmptyParse: " + endorsement.ParseEmptyText);
 
                 HttpResponseMessage response = new HttpResponseMessage();
                 response.StatusCode = HttpStatusCode.OK;
-
-                if (endorsement.ParseEmptyText)
-                    return response;
 
                 var responseStream = _fileService.GetMemoryStream(EndorsementPath);
                 response.Content = new StreamContent(responseStream);
@@ -45,12 +42,12 @@ namespace BizCover.Utility.Document.Template.Controllers
             }
             catch (IOException ex)
             {
-                var errorResponse = ReturnErrorResponseMessage(HttpStatusCode.InternalServerError, ex.Message + "::InnerException::" + ex.InnerException?.Message);
+                var errorResponse = ReturnErrorResponseMessage(HttpStatusCode.InternalServerError, ex.Message + "::InnerException::" + ex.InnerException?.Message + " :: TemplateUrl: " + endorsement.TemplatePdfUrl);
                 throw new HttpResponseException(errorResponse);
             }
             catch (Exception ex)
             {
-                var errorResponse = ReturnErrorResponseMessage(HttpStatusCode.InternalServerError, ex.Message + "::InnerException::" + ex.InnerException?.Message);
+                var errorResponse = ReturnErrorResponseMessage(HttpStatusCode.InternalServerError, ex.Message + "::InnerException::" + ex.InnerException?.Message + " :: TemplateUrl: " + endorsement.TemplatePdfUrl);
                 throw new HttpResponseException(errorResponse);
             }
         }
