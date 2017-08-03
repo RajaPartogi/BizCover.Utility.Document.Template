@@ -376,11 +376,11 @@ namespace BizCover.Utility.Document.Template.Services
                 CleanUpFile(folderEndorsement, TimeSpan.FromDays(1));
                 endorsementPath = folderEndorsement + filename;
             }
-            
+
+            var reader = new PdfReader(templatePath);
+            var stamper = new PdfStamper(reader, new FileStream(endorsementPath, FileMode.Create));
             try
             {
-                var reader = new PdfReader(templatePath);
-                var stamper = new PdfStamper(reader, new FileStream(endorsementPath, FileMode.Create));
                 stamper.SetEncryption(PdfWriter.STRENGTH128BITS, string.Empty, EndorsementConstant.S_PASSWORD, PdfWriter.AllowPrinting | PdfWriter.AllowCopy | PdfWriter.AllowScreenReaders);
                 var pdfFormFields = stamper.AcroFields;
 
@@ -398,18 +398,20 @@ namespace BizCover.Utility.Document.Template.Services
                         pdfFormFields.SetField(field, value);
                 }
 
+                return endorsementPath;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
                 // flatten form fields and close document
                 stamper.Close();
                 stamper.FormFlattening = true;
                 stamper.Dispose();
                 reader.Close();
                 reader.Dispose();
-
-                return endorsementPath;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
             }
         }
     }
