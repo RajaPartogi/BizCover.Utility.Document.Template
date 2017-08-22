@@ -8,6 +8,7 @@ using BizCover.Common.DtoModels.Certificate;
 using BizCover.Common.DtoModels.Endorsement;
 using BizCover.Utility.Document.Template.Constants;
 using BizCover.Utility.Document.Template.Extensions;
+using BizCover.Utility.Document.Template.Services.Classes;
 using BizCover.Utility.Document.Template.Services.Interfaces;
 using iTextSharp.text.pdf;
 
@@ -16,6 +17,7 @@ namespace BizCover.Utility.Document.Template.Services
     public class GenerateDocumentService : IGenerateDocumentService
     {
         private readonly IFileService _fileService;
+        private readonly DocumentTemplateLogger _logger;
 
         public GenerateDocumentService(IFileService fileService)
         {
@@ -23,31 +25,56 @@ namespace BizCover.Utility.Document.Template.Services
             CleanUpFile(HttpContext.Current.Server.MapPath(CertificateConstant.S_TEMPLATE_PDF_PATH), TimeSpan.FromDays(1));
             CleanUpFile(HttpContext.Current.Server.MapPath(CertificateConstant.S_SIGNATURE_IMAGE_PATH), TimeSpan.FromDays(1));
             CleanUpFile(HttpContext.Current.Server.MapPath(CertificateConstant.S_OUTPUT_PATH), TimeSpan.FromDays(1));
+            _logger = new DocumentTemplateLogger();
         }
 
         private bool DownloadFile(string url, string absolutePath)
         {
+            _logger.WriteInfo("DownloadFile :: Invoked :: url: " + url + " :: absolutePath: " + absolutePath);
+
             if (string.IsNullOrEmpty(absolutePath))
+            {
+                _logger.WriteInfo("DownloadFile :: absolutePath is null. Return False.");
                 return false;
+            }
+
             try
             {
                 using (var client = new HttpClient())
                 {
+                    _logger.WriteInfo("DownloadFile :: Open file for writing :: Path: " + absolutePath);
                     using (var output = File.OpenWrite(absolutePath))
-                    using (var input = client.GetStreamAsync(url).Result)
                     {
-                        byte[] buffer = new byte[CertificateConstant.N_BYTE_LENGTH];
-                        int bytesRead;
-                        while ((bytesRead = input.Read(buffer, 0, buffer.Length)) > 0)
+                        _logger.WriteInfo("DownloadFile :: Opened file for writing :: Path: " + absolutePath);
+                        _logger.WriteInfo("DownloadFile :: Get file contents to write to opened file :: File contents path: " + url);
+
+                        using (var input = client.GetStreamAsync(url).Result)
                         {
-                            output.Write(buffer, 0, bytesRead);
+                            _logger.WriteInfo("DownloadFile :: Stream opened to url: " + url);
+
+                            byte[] buffer = new byte[CertificateConstant.N_BYTE_LENGTH];
+                            int bytesRead;
+
+                            _logger.WriteInfo("DownloadFile :: Start reading stream. :: url: " + url);
+
+                            while ((bytesRead = input.Read(buffer, 0, buffer.Length)) > 0)
+                            {
+                                _logger.WriteInfo("DownloadFile :: Write stream to file :: Buffer length: " + buffer.Length + " :: bytesRead: " + bytesRead);
+                                output.Write(buffer, 0, bytesRead);
+                            }
+
+                            _logger.WriteInfo("DownloadFile :: Writing to file completed.");
                         }
                     }
                 }
+
+                _logger.WriteInfo("DownloadFile :: Success.");
+
                 return true;
             }
             catch (Exception ex)
             {
+                _logger.WriteError("DownloadFile :: An exception occurred while trying to download a file. :: Message: " + ex.Message, ex);
                 return false;
             }
         }
@@ -99,6 +126,8 @@ namespace BizCover.Utility.Document.Template.Services
 
         private string GetResource(string url, string path)
         {
+            _logger.WriteInfo("GetResource invoked. :: url: " + url + " :: path: " + path);
+
             if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(path))
                 return null;
 
@@ -109,16 +138,32 @@ namespace BizCover.Utility.Document.Template.Services
                 Directory.CreateDirectory(folder);
 
             var templatePdfPath = folder + filename + fileExt;
+
+            _logger.WriteInfo("GetResource templatePdfPath: " + templatePdfPath);
+
             CleanUpFile(folder, TimeSpan.FromDays(1));
             if (File.Exists(templatePdfPath))
             {
+                _logger.WriteInfo("GetResource file exists at: " + templatePdfPath);
+
                 if (fileExt == EndorsementConstant.S_IMAGE_FILE_EXTENSION_PDF)
                 {
+                    _logger.WriteInfo("GetResource file valid pdf.");
+
                     if (IsValidPdf(templatePdfPath))
+                    {
+                        _logger.WriteInfo("GetResource return templatePdfPath." + templatePdfPath);
                         return templatePdfPath;
+                    }
                 }
-                else return templatePdfPath;
+                else
+                {
+                    _logger.WriteInfo("GetResource file invalid pdf. Return templatePdfPath. Return path: " + templatePdfPath);
+                    return templatePdfPath;
+                }
             }
+
+            _logger.WriteInfo("GetResource start download file.");
 
             return DownloadFile(url, templatePdfPath) ? templatePdfPath : string.Empty;
         }
@@ -346,41 +391,74 @@ namespace BizCover.Utility.Document.Template.Services
             if (endorsement == null)
                 return null;
 
+            _logger.WriteInfo("GenerateEndorsement invoked. ");
+            
             var templatePath = GetResource(endorsement.TemplatePdfUrl, EndorsementConstant.S_TEMPLATE_PDF_PATH);
+
+            _logger.WriteInfo("GetResource done. TemplatePath: " + templatePath);
+
             if (!File.Exists(templatePath))
+            {
+                _logger.WriteInfo("Endorsement file does not exist at path: " + templatePath);
                 throw new Exception("Template pdf file not exists! :: Path: " + templatePath + " :: templatePdfUrl: " + endorsement.TemplatePdfUrl);
+            }
 
             if (IsValidPdf(templatePath) == false)
+            {
+                _logger.WriteInfo("IsValidPdf is false :: TemplatePath: " + templatePath);
                 throw new Exception("Template pdf file is invalid! :: Path: " + templatePath + " :: templatePdfUrl: " + endorsement.TemplatePdfUrl);
+            }
 
             var filename = string.Empty;
             var folderEndorsement = string.Empty;
             var endorsementPath = string.Empty;
 
+            _logger.WriteInfo("Endorsement is set to parseemptytext: " + endorsement.ParseEmptyText);
+
             if (endorsement.ParseEmptyText)
             {
                 filename = string.Format(CertificateConstant.S_DOCUMENT_FILENAME_EMPTY_FORMAT, EndorsementConstant.S_DOCUMENT_FILENAME_EMPTY, endorsement.EndorsementCode);
+
+                _logger.WriteInfo("Empty Endorsement filename: " + filename);
+
                 folderEndorsement = HttpContext.Current.Server.MapPath(EndorsementConstant.S_OUTPUT_PATH_EMPTY);
+
+                _logger.WriteInfo("Empty Endorsement folder: " + folderEndorsement);
+
                 endorsementPath = folderEndorsement + filename;
+
+                _logger.WriteInfo("Empty Endorsement path: " + endorsementPath);
 
                 //Cleanup once a week.
                 CleanUpFile(folderEndorsement, TimeSpan.FromDays(7));
 
                 if (File.Exists(endorsementPath))
+                {
+                    _logger.WriteInfo("Empty Endorsement exists already. Return path. " + endorsementPath);
                     return endorsementPath;
+                }
             }
             else
             {
                 filename = _fileService.GetFileName("endorsement", endorsement.ApplicationId, endorsement.ProductId);
+
+                _logger.WriteInfo("Endorsement file: " + filename);
+
                 folderEndorsement = HttpContext.Current.Server.MapPath(EndorsementConstant.S_OUTPUT_PATH);
+
+                _logger.WriteInfo("Endorsement folder: " + folderEndorsement);
+
                 CleanUpFile(folderEndorsement, TimeSpan.FromDays(1));
                 endorsementPath = folderEndorsement + filename;
+
+                _logger.WriteInfo("Endorsement path: " + endorsementPath);
             }
 
             var reader = new PdfReader(templatePath);
             var stamper = new PdfStamper(reader, new FileStream(endorsementPath, FileMode.Create));
             try
             {
+                _logger.WriteInfo("Parse actual pdf document start. ");
                 stamper.SetEncryption(PdfWriter.STRENGTH128BITS, string.Empty, EndorsementConstant.S_PASSWORD, PdfWriter.AllowPrinting | PdfWriter.AllowCopy | PdfWriter.AllowScreenReaders);
                 var pdfFormFields = stamper.AcroFields;
 
@@ -398,10 +476,14 @@ namespace BizCover.Utility.Document.Template.Services
                         pdfFormFields.SetField(field, value);
                 }
 
+                _logger.WriteInfo("Parse actual pdf document done. ");
+
                 return endorsementPath;
             }
             catch (Exception ex)
             {
+                _logger.WriteError("An exception occurred while trying to parse the pdf document. Message: " + ex.Message, ex);
+
                 throw ex;
             }
             finally
