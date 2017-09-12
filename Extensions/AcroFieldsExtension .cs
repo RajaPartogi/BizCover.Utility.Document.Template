@@ -18,7 +18,7 @@ namespace BizCover.Utility.Document.Template.Extensions
 
         public static bool SetField(this AcroFields fields, string fieldName, DateTime value)
         {
-            return fields.SetField(fieldName, value.ToString(BCDateHelper.DateFormat));
+            return fields.SetField(fieldName, value.ToString(BCDateHelper.DateFormatShort));
         }
 
         public static bool SetField(this AcroFields fields, string fieldName, decimal value)
