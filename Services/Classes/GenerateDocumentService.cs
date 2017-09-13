@@ -203,7 +203,7 @@ namespace BizCover.Utility.Document.Template.Services
             {
                 var reader = new PdfReader(templatePath);
                 var stamper = new PdfStamper(reader, new FileStream(certificatePath, FileMode.Create));
-                stamper.SetEncryption(PdfWriter.STRENGTH128BITS, string.Empty, CertificateConstant.S_PASSWORD, PdfWriter.AllowPrinting | PdfWriter.AllowCopy | PdfWriter.AllowScreenReaders);
+                stamper.SetEncryption(PdfWriter.STRENGTH128BITS, string.Empty, certificate.PdfPassword, PdfWriter.AllowPrinting | PdfWriter.AllowCopy | PdfWriter.AllowScreenReaders);
                 var pdfFormFields = stamper.AcroFields;
 
                 pdfFormFields.SetField(CertificateFieldsConstant.S_DATE, certificate.Date);
@@ -459,7 +459,7 @@ namespace BizCover.Utility.Document.Template.Services
             try
             {
                 _logger.WriteInfo("Parse actual pdf document start. ");
-                stamper.SetEncryption(PdfWriter.STRENGTH128BITS, string.Empty, EndorsementConstant.S_PASSWORD, PdfWriter.AllowPrinting | PdfWriter.AllowCopy | PdfWriter.AllowScreenReaders);
+                stamper.SetEncryption(PdfWriter.STRENGTH128BITS, string.Empty, endorsement.PdfPassword, PdfWriter.AllowPrinting | PdfWriter.AllowCopy | PdfWriter.AllowScreenReaders);
                 var pdfFormFields = stamper.AcroFields;
 
                 foreach (var variableValue in endorsement.VariableValues)
