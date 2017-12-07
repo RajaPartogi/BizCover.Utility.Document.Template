@@ -370,10 +370,10 @@ namespace BizCover.Utility.Document.Template.Services
                 
                 var signatureFile = GetResource(certificate.SignatureImageUrl, CertificateConstant.S_SIGNATURE_IMAGE_PATH);
                 stamper.SetImage(CertificateFieldsConstant.S_SIGNATURE, signatureFile);
-               
+
                 // flatten form fields and close document
-                stamper.Close();
                 stamper.FormFlattening = true;
+                stamper.Close();
                 stamper.Dispose();
                 reader.Close();
                 reader.Dispose();
@@ -489,8 +489,8 @@ namespace BizCover.Utility.Document.Template.Services
             finally
             {
                 // flatten form fields and close document
-                stamper.Close();
                 stamper.FormFlattening = true;
+                stamper.Close();
                 stamper.Dispose();
                 reader.Close();
                 reader.Dispose();
