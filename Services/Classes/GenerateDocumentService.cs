@@ -102,27 +102,7 @@ namespace BizCover.Utility.Document.Template.Services
 
             var filename = Path.GetFileNameWithoutExtension(url);
             return filename;
-        }
-
-        private bool IsValidPdf(string filepath)
-        {
-            if (string.IsNullOrEmpty(filepath))
-                return false;
-
-            bool Ret = true;
-            PdfReader reader = null;
-            try
-            {
-                reader = new PdfReader(filepath);
-            }
-            catch
-            {
-                Ret = false;
-                File.Delete(filepath);
-            }
-
-            return Ret;
-        }
+        }       
 
         private string GetResource(string url, string path)
         {
@@ -150,7 +130,7 @@ namespace BizCover.Utility.Document.Template.Services
                 {
                     _logger.WriteInfo("GetResource file valid pdf.");
 
-                    if (IsValidPdf(templatePdfPath))
+                    if (_fileService.IsValidPdf(templatePdfPath))
                     {
                         _logger.WriteInfo("GetResource return templatePdfPath." + templatePdfPath);
                         return templatePdfPath;
@@ -403,7 +383,7 @@ namespace BizCover.Utility.Document.Template.Services
                 throw new Exception("Template pdf file not exists! :: Path: " + templatePath + " :: templatePdfUrl: " + endorsement.TemplatePdfUrl);
             }
 
-            if (IsValidPdf(templatePath) == false)
+            if (_fileService.IsValidPdf(templatePath) == false)
             {
                 _logger.WriteInfo("IsValidPdf is false :: TemplatePath: " + templatePath);
                 throw new Exception("Template pdf file is invalid! :: Path: " + templatePath + " :: templatePdfUrl: " + endorsement.TemplatePdfUrl);
@@ -454,6 +434,12 @@ namespace BizCover.Utility.Document.Template.Services
                 _logger.WriteInfo("Endorsement path: " + endorsementPath);
             }
 
+            if (File.Exists(endorsementPath))
+            {
+                File.Delete(endorsementPath);
+                _logger.WriteInfo("Endorsement exists already. Delete file. " + endorsementPath);
+            }
+
             var reader = new PdfReader(templatePath);
             var stamper = new PdfStamper(reader, new FileStream(endorsementPath, FileMode.Create));
             try
@@ -461,19 +447,27 @@ namespace BizCover.Utility.Document.Template.Services
                 _logger.WriteInfo("Parse actual pdf document start. ");
                 stamper.SetEncryption(PdfWriter.STRENGTH128BITS, string.Empty, endorsement.PdfPassword, PdfWriter.AllowPrinting | PdfWriter.AllowCopy | PdfWriter.AllowScreenReaders);
                 var pdfFormFields = stamper.AcroFields;
+                var imageExtensions = new string[] { EndorsementConstant.S_IMAGE_FILE_EXTENSION_PNG, EndorsementConstant.S_IMAGE_FILE_EXTENSION_JPG };
 
-                foreach (var variableValue in endorsement.VariableValues)
+                if (endorsement.VariableValues != null)
                 {
-                    var field = variableValue.Key;
-                    var value = variableValue.Value;
-                    var imageExtensions = new List<string>() {EndorsementConstant.S_IMAGE_FILE_EXTENSION_PNG, EndorsementConstant.S_IMAGE_FILE_EXTENSION_JPG};
-                    if (imageExtensions.Contains(Path.GetExtension(value)))
+                    foreach (var variableValue in endorsement.VariableValues)
                     {
-                        var signatureFile = GetResource(value, EndorsementConstant.S_SIGNATURE_IMAGE_PATH);
-                        stamper.SetImage(field, signatureFile);
+
+                        if (imageExtensions.Contains(Path.GetExtension(variableValue.Value)))
+                        {
+                            var signatureFile = GetResource(variableValue.Value, EndorsementConstant.S_SIGNATURE_IMAGE_PATH);
+
+                            if (!string.IsNullOrWhiteSpace(signatureFile))
+                            {
+                                stamper.SetImage(variableValue.Key, signatureFile);
+                            }
+                        }
+                        else
+                        {
+                            pdfFormFields.SetField(variableValue.Key, variableValue.Value);
+                        }
                     }
-                    else
-                        pdfFormFields.SetField(field, value);
                 }
 
                 _logger.WriteInfo("Parse actual pdf document done. ");

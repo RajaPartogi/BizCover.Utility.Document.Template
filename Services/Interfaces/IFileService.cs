@@ -6,5 +6,6 @@ namespace BizCover.Utility.Document.Template.Services.Interfaces
     {
         MemoryStream GetMemoryStream(string filePath);
         string GetFileName(string perfix, int applicationId, int productId);
+        bool IsValidPdf(string filepath);
     }
 }

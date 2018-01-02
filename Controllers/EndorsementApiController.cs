@@ -4,9 +4,9 @@ using System.Net;
 using System.Net.Http;
 using System.Web.Http;
 using BizCover.Common.DtoModels.Endorsement;
-using BizCover.Utility.Document.Template.Services.Classes;
 using BizCover.Utility.Document.Template.Services.Interfaces;
-using log4net;
+using BizCover.Common.Infrastructure.Logging;
+using Ninject;
 
 namespace BizCover.Utility.Document.Template.Controllers
 {
@@ -14,42 +14,51 @@ namespace BizCover.Utility.Document.Template.Controllers
     {
         private readonly IGenerateDocumentService _generateDocumentService;
         private readonly IFileService _fileService;
-        private readonly DocumentTemplateLogger _logger;
+
+        [Inject]
+        private readonly ILogger _logger;
         
         public EndorsementApiController(IGenerateDocumentService generateDocumentService, IFileService fileService)
         {
             _generateDocumentService = generateDocumentService;
-            _fileService = fileService;
-            _logger = new DocumentTemplateLogger();
+            _fileService = fileService;            
         }
 
         [HttpPost]
         [Route("api/getEndorsement")]
         public HttpResponseMessage GetEndorsement([FromBody] EndorsementDto endorsement)
-        {   
+        {
             if (endorsement == null)
+            {
                 return ReturnErrorResponseMessage(HttpStatusCode.BadRequest, "Endorsement payload is invalid");
+            }
 
             try
             {
-                _logger.WriteInfo("GetEndorsement :: GetPath started.");
-                var EndorsementPath = _generateDocumentService.GenerateEndorsement(endorsement);
-                _logger.WriteInfo("GetEndorsement :: GetPath done. :: EndorsementPath :: " + EndorsementPath);
+                _logger.LogTrace("GetEndorsement :: GetPath started.");
+                var endorsementPath = _generateDocumentService.GenerateEndorsement(endorsement);
+                _logger.LogTrace("GetEndorsement :: GetPath done. :: EndorsementPath :: " + endorsementPath);
 
-                if (string.IsNullOrEmpty(EndorsementPath))
+                if (string.IsNullOrWhiteSpace(endorsementPath))
                 {
-                    _logger.WriteInfo("GetEndorsement :: EndorsementPath is null or empty.");
+                    _logger.LogTrace("GetEndorsement :: EndorsementPath is null or empty.");
                     return ReturnErrorResponseMessage(HttpStatusCode.InternalServerError, "Endorsement generation failed :: TemplateUrl: " + endorsement.TemplatePdfUrl + " :: EmptyParse: " + endorsement.ParseEmptyText);
+                }
+
+                if (_fileService.IsValidPdf(endorsementPath) == false)
+                {
+                    _logger.LogTrace("GetEndorsement :: EndorsementPath is invalid pdf::" + endorsementPath);
+                    return ReturnErrorResponseMessage(HttpStatusCode.InternalServerError, "Endorsement generation failed :: invalid pdf :: TemplateUrl: " + endorsement.TemplatePdfUrl + " :: EmptyParse: " + endorsement.ParseEmptyText);
                 }
 
                 HttpResponseMessage response = new HttpResponseMessage();
                 response.StatusCode = HttpStatusCode.OK;
 
-                _logger.WriteInfo("GetEndorsement :: Get memomry stream from endorsment at ." + EndorsementPath);
+                _logger.LogTrace("GetEndorsement :: Get memomry stream from endorsment at ." + endorsementPath);
 
-                var responseStream = _fileService.GetMemoryStream(EndorsementPath);
+                var responseStream = _fileService.GetMemoryStream(endorsementPath);
 
-                _logger.WriteInfo("GetEndorsement :: Get memomry stream done .");
+                _logger.LogTrace("GetEndorsement :: Get memomry stream done .");
 
                 response.Content = new StreamContent(responseStream);
 
@@ -57,13 +66,13 @@ namespace BizCover.Utility.Document.Template.Controllers
             }
             catch (IOException ex)
             {
-                _logger.WriteError("GetEndorsement :: IOException occured. Message: " + ex.Message, ex);
+                _logger.LogException(ex);
                 var errorResponse = ReturnErrorResponseMessage(HttpStatusCode.InternalServerError, ex.Message + "::InnerException::" + ex.InnerException?.Message + " :: TemplateUrl: " + endorsement.TemplatePdfUrl);
                 throw new HttpResponseException(errorResponse);
             }
             catch (Exception ex)
             {
-                _logger.WriteError("GetEndorsement :: Exception occured. Message: " + ex.Message, ex);
+                _logger.LogException(ex);
                 var errorResponse = ReturnErrorResponseMessage(HttpStatusCode.InternalServerError, ex.Message + "::InnerException::" + ex.InnerException?.Message + " :: TemplateUrl: " + endorsement.TemplatePdfUrl);
                 throw new HttpResponseException(errorResponse);
             }
