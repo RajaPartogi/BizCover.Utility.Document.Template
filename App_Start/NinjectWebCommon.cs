@@ -1,4 +1,5 @@
 using System.Web.Http;
+using BizCover.Common.Infrastructure.Logging;
 using BizCover.Utility.Document.Template.Services;
 using BizCover.Utility.Document.Template.Services.Interfaces;
 using Ninject.Web.WebApi;
@@ -67,6 +68,7 @@ namespace BizCover.Utility.Document.Template.App_Start
         {
             kernel.Bind<IGenerateDocumentService>().To<GenerateDocumentService>().InSingletonScope();
             kernel.Bind<IFileService>().To<FileService>().InSingletonScope();
-        }        
+            kernel.Bind<ILogger>().To<NLogLogger>().WithConstructorArgument(typeof(NLog.ILogger), context => NLog.LogManager.GetLogger("BizCover.Utility.Document.Template"));
+        }
     }
 }

@@ -14,14 +14,13 @@ namespace BizCover.Utility.Document.Template.Controllers
     {
         private readonly IGenerateDocumentService _generateDocumentService;
         private readonly IFileService _fileService;
-
-        [Inject]
         private readonly ILogger _logger;
         
-        public EndorsementApiController(IGenerateDocumentService generateDocumentService, IFileService fileService)
+        public EndorsementApiController(IGenerateDocumentService generateDocumentService, IFileService fileService, ILogger logger)
         {
             _generateDocumentService = generateDocumentService;
-            _fileService = fileService;            
+            _fileService = fileService;
+            _logger = logger;
         }
 
         [HttpPost]
