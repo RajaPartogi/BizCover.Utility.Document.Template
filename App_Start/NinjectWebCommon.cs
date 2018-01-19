@@ -1,8 +1,7 @@
-using System.Web.Http;
 using BizCover.Common.Infrastructure.Logging;
 using BizCover.Utility.Document.Template.Services;
+using BizCover.Utility.Document.Template.Services.Classes;
 using BizCover.Utility.Document.Template.Services.Interfaces;
-using Ninject.Web.WebApi;
 
 [assembly: WebActivatorEx.PreApplicationStartMethod(typeof(BizCover.Utility.Document.Template.App_Start.NinjectWebCommon), "Start")]
 [assembly: WebActivatorEx.ApplicationShutdownMethodAttribute(typeof(BizCover.Utility.Document.Template.App_Start.NinjectWebCommon), "Stop")]
