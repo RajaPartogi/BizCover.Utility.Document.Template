@@ -207,7 +207,7 @@ namespace BizCover.Utility.Document.Template.Services.Classes
                     insurerNumber += 1;
                 }
 
-                var policyGL = certificate.PolicyGl;
+                var policyGL = certificate.PolicySectionGl;
                 if (policyGL != null)
                 {
                     //General Liability
@@ -343,6 +343,13 @@ namespace BizCover.Utility.Document.Template.Services.Classes
 
 
                 pdfFormFields.SetField(CertificateFieldsConstant.S_DESCRIPTION, certificate.Description);
+
+                for (var i = 0; i < certificate.DescriptionColumn.Count(); i++)
+                {
+                    CustomCoverage customCoverage = certificate.DescriptionColumn.ElementAt(i);
+                    pdfFormFields.SetField(CertificateFieldsConstant.S_DESCRIPTIONCOLUMN + (i+1), customCoverage.FullFormat);
+                }
+
                 pdfFormFields.SetField(CertificateFieldsConstant.S_HOLDER, certificate.Holder.FullFormat);
 
                 //add signature image

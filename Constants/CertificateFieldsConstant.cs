@@ -106,6 +106,7 @@ namespace BizCover.Utility.Document.Template.Constants
         public const string S_OTHER_SUBROGATION_WAIVER                  = "tagSWOther";
 
         public const string S_DESCRIPTION                               = "tagClientCertDescription";
+        public const string S_DESCRIPTIONCOLUMN                         = "tagClientCertDescriptionCol";
         public const string S_HOLDER                                    = "tagCertHolderAll";
         public const string S_SIGNATURE                                 = "tagImgAuthorisedSignature";
     }
