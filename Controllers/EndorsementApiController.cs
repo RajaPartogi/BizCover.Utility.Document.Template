@@ -6,7 +6,6 @@ using System.Web.Http;
 using BizCover.Common.DtoModels.Endorsement;
 using BizCover.Utility.Document.Template.Services.Interfaces;
 using BizCover.Common.Infrastructure.Logging;
-using Ninject;
 
 namespace BizCover.Utility.Document.Template.Controllers
 {

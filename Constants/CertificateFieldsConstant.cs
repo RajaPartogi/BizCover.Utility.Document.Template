@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-
-namespace BizCover.Utility.Document.Template.Constants
+﻿namespace BizCover.Utility.Document.Template.Constants
 {
     public static class CertificateFieldsConstant
     {
