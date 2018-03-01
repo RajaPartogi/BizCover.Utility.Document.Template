@@ -65,8 +65,8 @@ namespace BizCover.Utility.Document.Template.App_Start
         /// <param name="kernel">The kernel.</param>
         private static void RegisterServices(IKernel kernel)
         {
-            kernel.Bind<IGenerateDocumentService>().To<GenerateDocumentService>().InSingletonScope();
-            kernel.Bind<IFileService>().To<FileService>().InSingletonScope();
+            kernel.Bind<IGenerateDocumentService>().To<GenerateDocumentService>().InTransientScope();
+            kernel.Bind<IFileService>().To<FileService>().InTransientScope();
             kernel.Bind<ILogger>().To<NLogLogger>().WithConstructorArgument(typeof(NLog.ILogger), context => NLog.LogManager.GetLogger("BizCover.Utility.Document.Template"));
         }
     }

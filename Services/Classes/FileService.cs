@@ -1,18 +1,21 @@
 ﻿using System;
 using System.IO;
 using BizCover.Common.Constants;
+using BizCover.Common.Infrastructure.Logging;
 using BizCover.Utility.Document.Template.Constants;
 using BizCover.Utility.Document.Template.Services.Interfaces;
 using iTextSharp.text.pdf;
-using BizCover.Common.Infrastructure.Logging;
-using Ninject;
 
-namespace BizCover.Utility.Document.Template.Services
+namespace BizCover.Utility.Document.Template.Services.Classes
 {
     public class FileService : IFileService
     {
-        [Inject]
-        private ILogger _logger { get; set; }
+        private readonly ILogger _logger;
+
+        public FileService(ILogger logger)
+        {
+            _logger = logger;
+        }
 
         public MemoryStream GetMemoryStream(string filePath)
         {

@@ -49,8 +49,10 @@ namespace BizCover.Utility.Document.Template.Controllers
                     return ReturnErrorResponseMessage(HttpStatusCode.InternalServerError, "Endorsement generation failed :: invalid pdf :: TemplateUrl: " + endorsement.TemplatePdfUrl + " :: EmptyParse: " + endorsement.ParseEmptyText);
                 }
 
-                HttpResponseMessage response = new HttpResponseMessage();
-                response.StatusCode = HttpStatusCode.OK;
+                HttpResponseMessage response = new HttpResponseMessage
+                {
+                    StatusCode = HttpStatusCode.OK
+                };
 
                 _logger.LogTrace("GetEndorsement :: Get memomry stream from endorsment at ." + endorsementPath);
 

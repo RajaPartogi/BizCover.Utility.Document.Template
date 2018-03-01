@@ -30,13 +30,18 @@ namespace BizCover.Utility.Document.Template.Controllers
             {
                 var certificatePath = _generateDocumentService.GenerateCertificate(certificate);
                 if (string.IsNullOrEmpty(certificatePath))
+                {
                     return ReturnErrorResponseMessage(HttpStatusCode.InternalServerError, "Certificate generation failed");
+                }
 
                 var responseStream = _fileService.GetMemoryStream(certificatePath);
 
-                HttpResponseMessage response = new HttpResponseMessage();
-                response.StatusCode = HttpStatusCode.OK;
-                response.Content = new StreamContent(responseStream);
+                var response = new HttpResponseMessage
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    Content = new StreamContent(responseStream)
+                };
+
                 return response;
             }
             catch (IOException ex)
